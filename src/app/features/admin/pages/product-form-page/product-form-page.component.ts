@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, effect, inject, OnInit } from '@angular/core';
+import { Component, effect, EventEmitter, inject, Input, OnInit, Output } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { AvailabilityStatus, PriceType } from '../../../../core/models/common.model';
@@ -20,7 +20,8 @@ import { CurrencyBrPipe } from '../../../../shared/pipes/currency-br.pipe';
         <h1>{{ isNew ? 'Novo produto' : 'Editar produto' }}</h1>
         <p>Produto, preço, disponibilidade, variações e opções.</p>
       </div>
-      <a class="button-ghost" routerLink="/admin/produtos">Voltar</a>
+      <button *ngIf="embedded" type="button" class="button-ghost" (click)="cancel.emit()">Fechar</button>
+      <a *ngIf="!embedded" class="button-ghost" routerLink="/admin/produtos">Voltar</a>
     </div>
 
     <section class="form-card">
@@ -150,6 +151,17 @@ export class ProductFormPageComponent implements OnInit {
     this.refreshProductState();
   });
 
+  @Input() embedded = false;
+  @Input() set editingProductId(id: string | null) {
+    if (!id) return;
+    this.isNew = false;
+    this.productId = id;
+    this.hasLoadedProductForm = false;
+    this.refreshProductState(true);
+  }
+  @Output() saved = new EventEmitter<Product>();
+  @Output() cancel = new EventEmitter<void>();
+
   isNew = true;
   isSavingProduct = false;
   saveMessage = '';
@@ -168,6 +180,8 @@ export class ProductFormPageComponent implements OnInit {
   optionDrafts: Record<string, { name: string; additionalPrice: number }> = {};
 
   ngOnInit(): void {
+    if (this.embedded) return;
+
     const id = this.route.snapshot.paramMap.get('id');
     this.isNew = !id;
     this.productId = id;
@@ -206,6 +220,7 @@ export class ProductFormPageComponent implements OnInit {
         await this.menu.updateProduct(this.productId, this.form);
         this.refreshProductState(true);
         this.saveMessage = 'Produto atualizado com sucesso.';
+        if (this.currentProduct) this.saved.emit(this.currentProduct);
       }
     } catch (error) {
       alert(error instanceof Error ? error.message : 'Não foi possível salvar o produto.');
