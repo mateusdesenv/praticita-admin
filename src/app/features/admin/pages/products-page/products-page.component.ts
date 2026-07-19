@@ -1,14 +1,15 @@
 import { CommonModule } from '@angular/common';
-import { Component, inject } from '@angular/core';
+import { Component, HostListener, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { Product } from '../../../../core/models/product.model';
 import { MenuService } from '../../../../core/services/menu.service';
+import { ProductFormPageComponent } from '../product-form-page/product-form-page.component';
 
 @Component({
   selector: 'app-products-page',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink],
+  imports: [CommonModule, FormsModule, RouterLink, ProductFormPageComponent],
   template: `
     <div class="admin-header">
       <div>
@@ -58,7 +59,7 @@ import { MenuService } from '../../../../core/services/menu.service';
             </td>
             <td>{{ product.displayOrder }}</td>
             <td class="table-actions">
-              <a class="button-ghost" [routerLink]="['/admin/produtos', product.id]">Editar</a>
+              <button type="button" class="button-ghost" (click)="openEdit(product)">Editar</button>
               <button class="button-ghost" (click)="duplicate(product)">Duplicar</button>
               <button class="button-danger" (click)="remove(product)">Excluir</button>
             </td>
@@ -67,6 +68,26 @@ import { MenuService } from '../../../../core/services/menu.service';
       </table>
       <div class="empty-state" *ngIf="filteredProducts().length === 0">Nenhum produto encontrado.</div>
     </section>
+
+    <div
+      *ngIf="editingProductId"
+      class="modal-backdrop"
+      role="presentation"
+      (mousedown)="closeEdit()">
+      <section
+        class="modal-panel product-edit-modal"
+        role="dialog"
+        aria-modal="true"
+        aria-label="Editar produto"
+        (mousedown)="$event.stopPropagation()">
+        <app-product-form-page
+          [embedded]="true"
+          [editingProductId]="editingProductId"
+          (saved)="handleProductSaved()"
+          (cancel)="closeEdit()">
+        </app-product-form-page>
+      </section>
+    </div>
   `
 })
 export class ProductsPageComponent {
@@ -74,6 +95,7 @@ export class ProductsPageComponent {
   search = '';
   categoryId = '';
   status = '';
+  editingProductId: string | null = null;
 
   filteredProducts(): Product[] {
     const term = this.search.trim().toLowerCase();
@@ -91,6 +113,23 @@ export class ProductsPageComponent {
 
   categoryName(id: string): string {
     return this.menu.getCategoryById(id)?.name ?? 'Sem categoria';
+  }
+
+  openEdit(product: Product): void {
+    this.editingProductId = product.id;
+  }
+
+  closeEdit(): void {
+    this.editingProductId = null;
+  }
+
+  handleProductSaved(): void {
+    this.closeEdit();
+  }
+
+  @HostListener('document:keydown.escape')
+  handleEscape(): void {
+    if (this.editingProductId) this.closeEdit();
   }
 
   async remove(product: Product): Promise<void> {
