@@ -20,18 +20,27 @@ import { MenuService } from '../../../../core/services/menu.service';
 
     <section class="search-card">
       <div class="form-grid three">
-        <input class="form-control" [(ngModel)]="search" placeholder="Buscar produto...">
-        <select class="form-control" [(ngModel)]="categoryId">
+        <div class="form-field">
+          <label for="product-search">Buscar produto</label>
+          <input id="product-search" class="form-control" [(ngModel)]="search" placeholder="Nome ou descrição">
+        </div>
+        <div class="form-field">
+          <label for="category-filter">Categoria</label>
+          <select id="category-filter" class="form-control" [(ngModel)]="categoryId">
           <option value="">Todas as categorias</option>
           <option *ngFor="let category of menu.categories()" [value]="category.id">{{ category.name }}</option>
-        </select>
-        <select class="form-control" [(ngModel)]="status">
+          </select>
+        </div>
+        <div class="form-field">
+          <label for="status-filter">Status</label>
+          <select id="status-filter" class="form-control" [(ngModel)]="status">
           <option value="">Todos os status</option>
           <option value="active">Ativos</option>
           <option value="inactive">Inativos</option>
           <option value="quote">Sob orçamento</option>
           <option value="on_request">Sob consulta</option>
-        </select>
+          </select>
+        </div>
       </div>
     </section>
 
