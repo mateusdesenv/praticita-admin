@@ -20,6 +20,8 @@ export type CategoryInput = Omit<Category, 'id' | 'slug' | 'createdAt' | 'update
 export class MenuService {
   private readonly repository = inject<MenuRepository>(MENU_REPOSITORY);
   private readonly state = signal<MenuData | null>(null);
+  readonly isLoading = signal(true);
+  readonly loadError = signal<string | null>(null);
 
   readonly data = computed(() => this.state());
   readonly categories = computed(() => this.sortByOrder(this.state()?.categories ?? []));
@@ -34,8 +36,17 @@ export class MenuService {
   }
 
   async load(): Promise<void> {
-    const data = await this.repository.getMenuData();
-    this.state.set(data);
+    this.isLoading.set(true);
+    this.loadError.set(null);
+
+    try {
+      const data = await this.repository.getMenuData();
+      this.state.set(data);
+    } catch (error) {
+      this.loadError.set(error instanceof Error ? error.message : 'Não foi possível carregar os dados do cardápio.');
+    } finally {
+      this.isLoading.set(false);
+    }
   }
 
   async saveAll(data: MenuData): Promise<void> {
