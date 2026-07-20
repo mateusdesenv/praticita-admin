@@ -15,6 +15,15 @@ const env = { ...parsedEnv, ...process.env };
 const apiBaseUrl = normalizeString(env.API_BASE_URL, 'http://localhost:3000/api');
 const persistenceMode = normalizePersistenceMode(env.PERSISTENCE_MODE, 'api');
 const apiAdminToken = normalizeString(env.API_ADMIN_TOKEN, '');
+const firebaseConfig = {
+  apiKey: normalizeString(env.FIREBASE_API_KEY, 'AIzaSyBCPk3W3YbplU_JcEZ81-s2zmOMk1eTA1M'),
+  authDomain: normalizeString(env.FIREBASE_AUTH_DOMAIN, 'praticita-29367.firebaseapp.com'),
+  projectId: normalizeString(env.FIREBASE_PROJECT_ID, 'praticita-29367'),
+  storageBucket: normalizeString(env.FIREBASE_STORAGE_BUCKET, 'praticita-29367.firebasestorage.app'),
+  messagingSenderId: normalizeString(env.FIREBASE_MESSAGING_SENDER_ID, '371966118006'),
+  appId: normalizeString(env.FIREBASE_APP_ID, '1:371966118006:web:4e1f9f60a07255fe16b757'),
+  measurementId: normalizeString(env.FIREBASE_MEASUREMENT_ID, 'G-7M5JKK4FLH')
+};
 
 const fileContent = `// Arquivo gerado por scripts/generate-environment.mjs.
 // Altere .env e rode npm run env para regenerar.
@@ -22,7 +31,16 @@ export const environment = {
   production: ${isProduction},
   apiBaseUrl: '${escapeTsString(apiBaseUrl)}',
   persistenceMode: '${persistenceMode}' as 'localStorage' | 'api',
-  apiAdminToken: '${escapeTsString(apiAdminToken)}'
+  apiAdminToken: '${escapeTsString(apiAdminToken)}',
+  firebase: {
+    apiKey: '${escapeTsString(firebaseConfig.apiKey)}',
+    authDomain: '${escapeTsString(firebaseConfig.authDomain)}',
+    projectId: '${escapeTsString(firebaseConfig.projectId)}',
+    storageBucket: '${escapeTsString(firebaseConfig.storageBucket)}',
+    messagingSenderId: '${escapeTsString(firebaseConfig.messagingSenderId)}',
+    appId: '${escapeTsString(firebaseConfig.appId)}',
+    measurementId: '${escapeTsString(firebaseConfig.measurementId)}'
+  }
 };
 `;
 

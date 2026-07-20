@@ -629,6 +629,380 @@ th { color: var(--color-muted); font-size: .78rem; text-transform: uppercase; le
   margin-left: auto;
 }
 
+.admin-user {
+  margin-top: 10px;
+  padding: 12px 8px 4px;
+  display: grid;
+  grid-template-columns: 36px minmax(0, 1fr) 34px;
+  align-items: center;
+  gap: 9px;
+  border-top: 1px solid rgba(255, 255, 255, .1);
+}
+
+.admin-user > img,
+.admin-user-fallback {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+}
+
+.admin-user > img {
+  object-fit: cover;
+}
+
+.admin-user-fallback {
+  display: grid;
+  place-items: center;
+  color: var(--admin-brand);
+  background: var(--admin-gold);
+  font-weight: 800;
+}
+
+.admin-user > span:nth-child(2) {
+  min-width: 0;
+  display: grid;
+  gap: 2px;
+}
+
+.admin-user strong,
+.admin-user small {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.admin-user strong {
+  font-size: .78rem;
+}
+
+.admin-user small {
+  color: rgba(255, 255, 255, .52);
+  font-size: .67rem;
+}
+
+.admin-user button {
+  width: 34px;
+  height: 34px;
+  padding: 7px;
+  border: 0;
+  border-radius: 10px;
+  color: rgba(255, 255, 255, .7);
+  background: rgba(255, 255, 255, .07);
+}
+
+.admin-user button:hover {
+  color: #fff;
+  background: rgba(255, 255, 255, .13);
+}
+
+.admin-user button svg {
+  width: 20px;
+  height: 20px;
+  fill: currentColor;
+}
+
+/* Admin authentication */
+
+.admin-login-page {
+  min-height: calc(100dvh - 74px);
+  padding: 32px;
+  display: grid;
+  place-items: center;
+  background:
+    radial-gradient(circle at 85% 10%, rgba(201, 140, 46, .12), transparent 25rem),
+    var(--admin-bg);
+}
+
+.admin-login-shell {
+  width: min(1120px, 100%);
+  min-height: 650px;
+  display: grid;
+  grid-template-columns: 1.08fr .92fr;
+  overflow: hidden;
+  border: 1px solid var(--admin-line);
+  border-radius: 30px;
+  background: var(--admin-surface);
+  box-shadow: 0 34px 90px rgba(47, 24, 18, .15);
+}
+
+.admin-login-story {
+  position: relative;
+  padding: 44px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  color: #fff;
+  background:
+    linear-gradient(145deg, rgba(45, 16, 12, .84), rgba(55, 20, 14, .96)),
+    url('/assets/praticita/dani-cleu.jpg') center/cover;
+  isolation: isolate;
+}
+
+.admin-login-story::after {
+  content: "";
+  position: absolute;
+  width: 330px;
+  height: 330px;
+  right: -150px;
+  bottom: -150px;
+  z-index: -1;
+  border: 1px solid rgba(229, 180, 84, .3);
+  border-radius: 50%;
+  box-shadow: 0 0 0 55px rgba(229, 180, 84, .06), 0 0 0 110px rgba(229, 180, 84, .04);
+}
+
+.admin-login-brand {
+  width: fit-content;
+  display: inline-flex;
+  align-items: center;
+  gap: 11px;
+}
+
+.admin-login-brand > span {
+  width: 45px;
+  height: 45px;
+  overflow: hidden;
+  border-radius: 13px;
+  background: #fffaf5;
+}
+
+.admin-login-brand img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.admin-login-brand strong {
+  font-family: "Playfair Display", Georgia, serif;
+  font-size: 1.25rem;
+}
+
+.admin-login-story-copy {
+  max-width: 520px;
+  margin: auto 0;
+}
+
+.admin-login-kicker {
+  display: inline-flex;
+  margin-bottom: 18px;
+  padding: 7px 12px;
+  border: 1px solid rgba(255, 255, 255, .2);
+  border-radius: 999px;
+  color: #f5d891;
+  background: rgba(255, 255, 255, .07);
+  font-size: .72rem;
+  font-weight: 800;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+}
+
+.admin-login-story h1 {
+  margin: 0;
+  font-family: "Playfair Display", Georgia, serif;
+  font-size: clamp(2.7rem, 5vw, 4.4rem);
+  line-height: .98;
+  letter-spacing: -.045em;
+}
+
+.admin-login-story p {
+  max-width: 470px;
+  margin: 22px 0 0;
+  color: rgba(255, 255, 255, .7);
+  font-size: 1.05rem;
+  line-height: 1.6;
+}
+
+.admin-login-benefits {
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  list-style: none;
+}
+
+.admin-login-benefits li {
+  padding-top: 12px;
+  display: grid;
+  gap: 6px;
+  border-top: 1px solid rgba(255, 255, 255, .18);
+  color: rgba(255, 255, 255, .74);
+  font-size: .76rem;
+  line-height: 1.35;
+}
+
+.admin-login-benefits span {
+  color: #e5b454;
+  font-weight: 800;
+}
+
+.admin-login-panel {
+  padding: 54px;
+  display: grid;
+  place-items: center;
+}
+
+.admin-login-form {
+  width: min(380px, 100%);
+  text-align: center;
+}
+
+.admin-login-lock {
+  width: 54px;
+  height: 54px;
+  margin: 0 auto 22px;
+  display: grid;
+  place-items: center;
+  border-radius: 17px;
+  color: #915d16;
+  background: var(--admin-gold-soft);
+}
+
+.admin-login-lock svg {
+  width: 25px;
+  height: 25px;
+  fill: currentColor;
+}
+
+.admin-login-form h2 {
+  margin: 0;
+  font-family: "Playfair Display", Georgia, serif;
+  font-size: 2.3rem;
+  line-height: 1.05;
+}
+
+.admin-login-form > p {
+  margin: 14px 0 28px;
+  color: var(--admin-muted);
+  line-height: 1.55;
+}
+
+.google-login-button {
+  width: 100%;
+  min-height: 54px;
+  padding: 12px 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  border: 1px solid #d9d0ca;
+  border-radius: 14px;
+  color: var(--admin-ink);
+  background: #fff;
+  box-shadow: var(--admin-shadow-sm);
+  font-weight: 700;
+  transition: border-color .18s ease, box-shadow .18s ease, transform .18s ease;
+}
+
+.google-login-button:hover:not(:disabled) {
+  border-color: #bcaea5;
+  box-shadow: var(--admin-shadow-md);
+  transform: translateY(-1px);
+}
+
+.google-login-button svg,
+.google-login-spinner {
+  width: 22px;
+  height: 22px;
+  flex: 0 0 22px;
+}
+
+.google-login-spinner {
+  border: 3px solid #eadfda;
+  border-top-color: var(--admin-gold);
+  border-radius: 50%;
+  animation: admin-spin .8s linear infinite;
+}
+
+.admin-login-error {
+  margin: 14px 0 0 !important;
+  padding: 10px 12px;
+  border: 1px solid #efc9c4;
+  border-radius: 12px;
+  color: #983f36 !important;
+  background: #fff7f6;
+  font-size: .86rem;
+}
+
+.admin-login-security {
+  margin-top: 24px;
+  padding: 14px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border-radius: 13px;
+  color: var(--admin-muted);
+  background: var(--admin-surface-soft);
+  font-size: .78rem;
+  line-height: 1.4;
+  text-align: left;
+}
+
+.admin-login-security svg {
+  width: 22px;
+  height: 22px;
+  flex: 0 0 22px;
+  fill: var(--admin-green);
+}
+
+.admin-login-back {
+  margin-top: 24px;
+  display: inline-flex;
+  color: #80531a;
+  font-size: .86rem;
+  font-weight: 700;
+}
+
+@media (max-width: 900px) {
+  .admin-login-page {
+    padding: 20px;
+  }
+
+  .admin-login-shell {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-login-story {
+    min-height: 430px;
+    padding: 32px;
+  }
+
+  .admin-login-panel {
+    padding: 48px 28px;
+  }
+}
+
+@media (max-width: 560px) {
+  .admin-login-page {
+    padding: 0;
+  }
+
+  .admin-login-shell {
+    border-radius: 0;
+  }
+
+  .admin-login-story {
+    min-height: 360px;
+    padding: 24px;
+  }
+
+  .admin-login-story h1 {
+    font-size: 2.5rem;
+  }
+
+  .admin-login-benefits {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-login-benefits li:nth-child(n+2) {
+    display: none;
+  }
+
+  .admin-login-panel {
+    padding: 42px 22px;
+  }
+}
+
 .admin-content {
   min-width: 0;
   padding: 12px 0 40px;

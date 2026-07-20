@@ -1,5 +1,6 @@
 import { Component } from '@angular/core';
-import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
+import { Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
+import { AuthService } from '../../../../core/services/auth.service';
 
 @Component({
   selector: 'app-admin-layout',
@@ -57,6 +58,23 @@ import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
             <span>Visualizar cardápio</span>
             <svg class="external-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M14 3h7v7h-2V6.4l-8.3 8.3-1.4-1.4L17.6 5H14V3ZM5 5h6v2H5v12h12v-6h2v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2Z"/></svg>
           </a>
+
+          <div class="admin-user">
+            @if (auth.user(); as user) {
+              @if (user.photoURL) {
+                <img [src]="user.photoURL" alt="">
+              } @else {
+                <span class="admin-user-fallback" aria-hidden="true">{{ user.displayName?.charAt(0) || 'P' }}</span>
+              }
+              <span>
+                <strong>{{ user.displayName || 'Conta Google' }}</strong>
+                <small>{{ user.email }}</small>
+              </span>
+              <button type="button" (click)="logout()" aria-label="Sair do painel" title="Sair">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 17v2H5V5h5v2H7v10h3Zm4.6-9.4L19 12l-4.4 4.4-1.4-1.4 2-2H9v-2h6.2l-2-2 1.4-1.4Z"/></svg>
+              </button>
+            }
+          </div>
         </aside>
 
         <section class="admin-content" id="admin-content" tabindex="-1">
@@ -66,4 +84,14 @@ import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
     </main>
   `
 })
-export class AdminLayoutComponent {}
+export class AdminLayoutComponent {
+  constructor(
+    readonly auth: AuthService,
+    private readonly router: Router
+  ) {}
+
+  async logout(): Promise<void> {
+    await this.auth.signOut();
+    await this.router.navigate(['/admin/login']);
+  }
+}

@@ -8,13 +8,17 @@ import { ProductsPageComponent } from './features/admin/pages/products-page/prod
 import { ProductFormPageComponent } from './features/admin/pages/product-form-page/product-form-page.component';
 import { BusinessSettingsPageComponent } from './features/admin/pages/business-settings-page/business-settings-page.component';
 import { ImportExportPageComponent } from './features/admin/pages/import-export-page/import-export-page.component';
+import { LoginPageComponent } from './features/auth/pages/login-page/login-page.component';
+import { authGuard, guestGuard } from './core/guards/auth.guard';
 
 export const routes: Routes = [
   { path: '', component: PublicMenuPageComponent },
   { path: 'produto/:slug', component: ProductDetailPageComponent },
+  { path: 'admin/login', component: LoginPageComponent, canActivate: [guestGuard] },
   {
     path: 'admin',
     component: AdminLayoutComponent,
+    canActivate: [authGuard],
     children: [
       { path: '', component: DashboardPageComponent },
       { path: 'categorias', component: CategoriesPageComponent },
