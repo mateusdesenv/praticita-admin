@@ -9,6 +9,7 @@ import { ProductFormPageComponent } from './features/admin/pages/product-form-pa
 import { BusinessSettingsPageComponent } from './features/admin/pages/business-settings-page/business-settings-page.component';
 import { ImportExportPageComponent } from './features/admin/pages/import-export-page/import-export-page.component';
 import { LoginPageComponent } from './features/auth/pages/login-page/login-page.component';
+import { CollaboratorsPageComponent } from './features/admin/pages/collaborators-page/collaborators-page.component';
 import { authGuard, guestGuard } from './core/guards/auth.guard';
 
 export const routes: Routes = [
@@ -20,13 +21,14 @@ export const routes: Routes = [
     component: AdminLayoutComponent,
     canActivate: [authGuard],
     children: [
-      { path: '', component: DashboardPageComponent },
-      { path: 'categorias', component: CategoriesPageComponent },
-      { path: 'produtos', component: ProductsPageComponent },
-      { path: 'produtos/novo', component: ProductFormPageComponent },
-      { path: 'produtos/:id', component: ProductFormPageComponent },
-      { path: 'configuracoes', component: BusinessSettingsPageComponent },
-      { path: 'importar-exportar', component: ImportExportPageComponent }
+      { path: '', component: DashboardPageComponent, canActivate: [authGuard], data: { permission: 'dashboard' } },
+      { path: 'categorias', component: CategoriesPageComponent, canActivate: [authGuard], data: { permission: 'categories' } },
+      { path: 'produtos', component: ProductsPageComponent, canActivate: [authGuard], data: { permission: 'products' } },
+      { path: 'produtos/novo', component: ProductFormPageComponent, canActivate: [authGuard], data: { permission: 'products' } },
+      { path: 'produtos/:id', component: ProductFormPageComponent, canActivate: [authGuard], data: { permission: 'products' } },
+      { path: 'colaboradores', component: CollaboratorsPageComponent, canActivate: [authGuard], data: { permission: 'collaborators' } },
+      { path: 'configuracoes', component: BusinessSettingsPageComponent, canActivate: [authGuard], data: { permission: 'settings' } },
+      { path: 'importar-exportar', component: ImportExportPageComponent, canActivate: [authGuard], data: { permission: 'backup' } }
     ]
   },
   { path: '**', redirectTo: '' }

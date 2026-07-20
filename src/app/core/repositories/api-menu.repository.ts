@@ -1,12 +1,19 @@
 import { Injectable } from '@angular/core';
+import { Router } from '@angular/router';
 import { environment } from '../../../environments/environment';
 import { MenuData } from '../models/menu-data.model';
 import { MenuRepository } from './menu.repository';
+import { AuthService } from '../services/auth.service';
+import type { PermissionScreen } from '../services/collaborators.service';
 
 @Injectable()
 export class ApiMenuRepository implements MenuRepository {
   private readonly baseUrl = this.normalizeBaseUrl(environment.apiBaseUrl);
-  private readonly adminToken = environment.apiAdminToken?.trim() ?? '';
+
+  constructor(
+    private readonly auth: AuthService,
+    private readonly router: Router
+  ) {}
 
   async getMenuData(): Promise<MenuData> {
     return this.request<MenuData>('/menu-data');
@@ -43,11 +50,21 @@ export class ApiMenuRepository implements MenuRepository {
   }
 
   private async request<T>(path: string, init: RequestInit = {}): Promise<T> {
+    if (init.method && init.method !== 'GET') {
+      const screen = this.currentScreen();
+      if (screen && !this.auth.canWrite(screen)) {
+        throw new Error('Você possui acesso somente para leitura nesta tela.');
+      }
+    }
+    const collaboratorSession = localStorage.getItem('praticita_collaborator_session');
+    let token = environment.apiAdminToken?.trim() ?? '';
+    try { token = JSON.parse(collaboratorSession || '{}')?.token || token; } catch {}
     const response = await fetch(`${this.baseUrl}${path}`, {
       ...init,
       headers: {
         'Content-Type': 'application/json',
-        ...(this.adminToken ? { Authorization: `Bearer ${this.adminToken}` } : {}),
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        ...(this.currentScreen() ? { 'x-praticita-screen': this.currentScreen()! } : {}),
         ...(init.headers || {})
       }
     });
@@ -59,6 +76,15 @@ export class ApiMenuRepository implements MenuRepository {
 
     if (response.status === 204) return undefined as T;
     return response.json() as Promise<T>;
+  }
+
+  private currentScreen(): PermissionScreen | null {
+    const url = this.router.url;
+    if (url.includes('/categorias')) return 'categories';
+    if (url.includes('/produtos')) return 'products';
+    if (url.includes('/configuracoes')) return 'settings';
+    if (url.includes('/importar-exportar')) return 'backup';
+    return null;
   }
 
   private async readErrorMessage(response: Response): Promise<string> {

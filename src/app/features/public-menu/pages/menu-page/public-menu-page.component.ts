@@ -60,6 +60,12 @@ import { CurrencyBrPipe } from '../../../../shared/pipes/currency-br.pipe';
 
           <div class="products-grid">
             <article class="product-card" *ngFor="let product of section.products" [class.featured]="product.isFeatured">
+              <img
+                *ngIf="product.imageUrl"
+                class="product-card-image"
+                [src]="product.imageUrl"
+                [alt]="product.name"
+                loading="lazy">
               <div class="product-top">
                 <div>
                   <h3>{{ product.name }}</h3>

@@ -1,4 +1,5 @@
 import { Component, signal } from '@angular/core';
+import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { FirebaseError } from 'firebase/app';
 import { AuthService } from '../../../../core/services/auth.service';
@@ -6,7 +7,7 @@ import { AuthService } from '../../../../core/services/auth.service';
 @Component({
   selector: 'app-login-page',
   standalone: true,
-  imports: [RouterLink],
+  imports: [RouterLink, FormsModule],
   template: `
     <main class="admin-login-page">
       <section class="admin-login-shell" aria-labelledby="login-title">
@@ -25,7 +26,7 @@ import { AuthService } from '../../../../core/services/auth.service';
           <ul class="admin-login-benefits" aria-label="Recursos do painel">
             <li><span>01</span> Cardápio sempre atualizado</li>
             <li><span>02</span> Produtos e categorias organizados</li>
-            <li><span>03</span> Acesso protegido pela sua conta Google</li>
+            <li><span>03</span> Acesso protegido por CPF ou conta Google</li>
           </ul>
         </div>
 
@@ -36,10 +37,34 @@ import { AuthService } from '../../../../core/services/auth.service';
             </span>
             <span class="eyebrow">Área administrativa</span>
             <h2 id="login-title">Bem-vinda de volta</h2>
-            <p>Entre com sua conta Google para acessar o painel da Praticità.</p>
+            <p>Entre com seu CPF e senha ou continue usando sua conta Google.</p>
 
-            <button class="google-login-button" type="button" (click)="login()" [disabled]="loading()">
-              @if (loading()) {
+            <form class="collaborator-login-form" (ngSubmit)="loginWithCpf()">
+              <div class="form-field">
+                <label for="login-cpf">Usuário (CPF)</label>
+                <input id="login-cpf" class="form-control" name="cpf" [ngModel]="cpf()" (ngModelChange)="setCpf($event)"
+                  inputmode="numeric" autocomplete="username" maxlength="14" placeholder="000.000.000-00">
+              </div>
+              <div class="form-field">
+                <label for="login-password">Senha</label>
+                <input id="login-password" class="form-control" name="password" type="password"
+                  [ngModel]="password()" (ngModelChange)="password.set($event)"
+                  autocomplete="current-password" placeholder="Digite sua senha">
+              </div>
+              <button class="collaborator-login-button" type="submit" [disabled]="loadingCpf() || loadingGoogle()">
+                @if (loadingCpf()) {
+                  <span class="google-login-spinner" aria-hidden="true"></span>
+                  Entrando...
+                } @else {
+                  Entrar no painel
+                }
+              </button>
+            </form>
+
+            <div class="admin-login-divider"><span>ou</span></div>
+
+            <button class="google-login-button" type="button" (click)="loginWithGoogle()" [disabled]="loadingGoogle() || loadingCpf()">
+              @if (loadingGoogle()) {
                 <span class="google-login-spinner" aria-hidden="true"></span>
                 <span>Conectando...</span>
               } @else {
@@ -59,7 +84,7 @@ import { AuthService } from '../../../../core/services/auth.service';
 
             <div class="admin-login-security">
               <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m12 2 8 3v6c0 5-3.4 9.7-8 11-4.6-1.3-8-6-8-11V5l8-3Zm0 2.1L6 6.3V11c0 3.8 2.4 7.5 6 8.8 3.6-1.3 6-5 6-8.8V6.3l-6-2.2Zm-1 10.3-3-3 1.4-1.4 1.6 1.6 3.6-3.6 1.4 1.4-5 5Z"/></svg>
-              <span>Autenticação segura fornecida pelo Google e Firebase.</span>
+              <span>Senhas protegidas e autenticação Google fornecida pelo Firebase.</span>
             </div>
 
             <a class="admin-login-back" routerLink="/">← Voltar ao cardápio</a>
@@ -70,8 +95,11 @@ import { AuthService } from '../../../../core/services/auth.service';
   `
 })
 export class LoginPageComponent {
-  readonly loading = signal(false);
+  readonly loadingGoogle = signal(false);
+  readonly loadingCpf = signal(false);
   readonly errorMessage = signal('');
+  readonly cpf = signal('');
+  readonly password = signal('');
 
   constructor(
     private readonly auth: AuthService,
@@ -79,14 +107,35 @@ export class LoginPageComponent {
     private readonly route: ActivatedRoute
   ) {}
 
-  async login(): Promise<void> {
-    this.loading.set(true);
+  setCpf(value: string): void {
+    const digits = value.replace(/\D/g, '').slice(0, 11);
+    this.cpf.set(digits.replace(/^(\d{3})(\d{3})(\d{3})(\d{0,2}).*/, '$1.$2.$3-$4').replace(/[-.]$/, ''));
+  }
+
+  async loginWithCpf(): Promise<void> {
+    this.errorMessage.set('');
+    if (this.cpf().replace(/\D/g, '').length !== 11 || !this.password()) {
+      this.errorMessage.set('Informe seu CPF e sua senha.');
+      return;
+    }
+    this.loadingCpf.set(true);
+    try {
+      await this.auth.signInWithCpf(this.cpf(), this.password());
+      await this.navigateAfterLogin();
+    } catch (error) {
+      this.errorMessage.set(error instanceof Error ? error.message : 'CPF ou senha inválidos.');
+    } finally {
+      this.loadingCpf.set(false);
+    }
+  }
+
+  async loginWithGoogle(): Promise<void> {
+    this.loadingGoogle.set(true);
     this.errorMessage.set('');
 
     try {
       await this.auth.signInWithGoogle();
-      const returnUrl = this.route.snapshot.queryParamMap.get('returnUrl');
-      await this.router.navigateByUrl(returnUrl?.startsWith('/admin') ? returnUrl : '/admin');
+      await this.navigateAfterLogin();
     } catch (error) {
       const code = error instanceof FirebaseError ? error.code : '';
       if (code !== 'auth/popup-closed-by-user' && code !== 'auth/cancelled-popup-request') {
@@ -97,7 +146,12 @@ export class LoginPageComponent {
         );
       }
     } finally {
-      this.loading.set(false);
+      this.loadingGoogle.set(false);
     }
+  }
+
+  private async navigateAfterLogin(): Promise<void> {
+    const returnUrl = this.route.snapshot.queryParamMap.get('returnUrl');
+    await this.router.navigateByUrl(returnUrl?.startsWith('/admin') ? returnUrl : '/admin');
   }
 }

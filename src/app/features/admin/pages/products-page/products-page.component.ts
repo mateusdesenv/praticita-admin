@@ -50,7 +50,15 @@ import { ProductFormPageComponent } from '../product-form-page/product-form-page
         <thead><tr><th>Produto</th><th>Categoria</th><th>Preço</th><th>Status</th><th>Ordem</th><th>Ações</th></tr></thead>
         <tbody>
           <tr *ngFor="let product of filteredProducts()">
-            <td><strong>{{ product.name }}</strong><br><small>{{ product.shortDescription }}</small></td>
+            <td>
+              <div class="admin-product-cell">
+                <span class="admin-product-thumb">
+                  <img *ngIf="product.imageUrl" [src]="product.imageUrl" alt="">
+                  <svg *ngIf="!product.imageUrl" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 3h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2Zm0 2v10.6l4-4 3 3 2-2 5 5V5H5Z"/></svg>
+                </span>
+                <span><strong>{{ product.name }}</strong><br><small>{{ product.shortDescription }}</small></span>
+              </div>
+            </td>
             <td>{{ categoryName(product.categoryId) }}</td>
             <td>{{ menu.getPriceLabel(product) }}</td>
             <td>

@@ -37,6 +37,42 @@ import { CurrencyBrPipe } from '../../../../shared/pipes/currency-br.pipe';
         <div class="form-field" style="grid-column: 1 / -1;"><label>Descrição curta</label><input class="form-control" [(ngModel)]="form.shortDescription"></div>
         <div class="form-field" style="grid-column: 1 / -1;"><label>Descrição completa</label><textarea class="form-control" [(ngModel)]="form.fullDescription"></textarea></div>
 
+        <div class="product-image-field">
+          <div class="product-image-preview" [class.has-image]="form.imageUrl">
+            <img *ngIf="form.imageUrl" [src]="form.imageUrl" [alt]="'Prévia de ' + (form.name || 'produto')">
+            <div *ngIf="!form.imageUrl" class="product-image-placeholder">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 3h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2Zm0 2v10.6l4-4 3 3 2-2 5 5V5H5Zm14 14v-1.2l-5-5-5 5-2-2L5 17.8V19h14ZM8.5 7A1.5 1.5 0 1 1 7 8.5 1.5 1.5 0 0 1 8.5 7Z"/></svg>
+              <strong>Nenhuma imagem</strong>
+              <span>A prévia aparecerá aqui.</span>
+            </div>
+          </div>
+
+          <div class="product-image-controls">
+            <span class="eyebrow">Imagem do produto</span>
+            <h2>Escolha uma foto bonita e bem iluminada</h2>
+            <p>A imagem é convertida automaticamente para WebP e Base64 antes de ser salva no banco.</p>
+
+            <label class="product-image-upload" [class.is-disabled]="isProcessingImage">
+              <input
+                #imageInput
+                type="file"
+                accept="image/jpeg,image/png,image/webp"
+                (change)="onImageSelected($event)"
+                [disabled]="isProcessingImage">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M11 15V6.8L8.4 9.4 7 8l5-5 5 5-1.4 1.4L13 6.8V15h-2Zm-6 6a2 2 0 0 1-2-2v-5h2v5h14v-5h2v5a2 2 0 0 1-2 2H5Z"/></svg>
+              <span>{{ isProcessingImage ? 'Otimizando imagem...' : (form.imageUrl ? 'Trocar imagem' : 'Selecionar imagem') }}</span>
+            </label>
+
+            <button *ngIf="form.imageUrl" type="button" class="button-ghost product-image-remove" (click)="removeImage(imageInput)">
+              Remover imagem
+            </button>
+
+            <small>JPG, PNG ou WebP · até 8 MB · otimizada para no máximo 180 KB.</small>
+            <p class="form-feedback success" *ngIf="imageMessage">{{ imageMessage }}</p>
+            <p class="form-feedback error" role="alert" *ngIf="imageError">{{ imageError }}</p>
+          </div>
+        </div>
+
         <div class="form-field"><label>Tipo de preço</label>
           <select class="form-control" [(ngModel)]="form.priceType">
             <option *ngFor="let type of priceTypes" [value]="type">{{ type }}</option>
@@ -58,7 +94,7 @@ import { CurrencyBrPipe } from '../../../../shared/pipes/currency-br.pipe';
         <label class="checkbox-row"><input type="checkbox" [(ngModel)]="form.isActive"> Ativo</label>
       </div>
       <div class="form-actions">
-        <button class="button" (click)="saveProduct()" [disabled]="isSavingProduct">
+        <button class="button" (click)="saveProduct()" [disabled]="isSavingProduct || isProcessingImage">
           {{ isSavingProduct ? 'Salvando...' : 'Salvar produto' }}
         </button>
       </div>
@@ -164,7 +200,10 @@ export class ProductFormPageComponent implements OnInit {
 
   isNew = true;
   isSavingProduct = false;
+  isProcessingImage = false;
   saveMessage = '';
+  imageMessage = '';
+  imageError = '';
   productId: string | null = null;
   currentProduct?: Product;
   productVariations: ProductVariation[] = [];
@@ -198,6 +237,47 @@ export class ProductFormPageComponent implements OnInit {
 
   trackById(_index: number, item: { id: string }): string {
     return item.id;
+  }
+
+  async onImageSelected(event: Event): Promise<void> {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+    if (!file) return;
+
+    this.imageMessage = '';
+    this.imageError = '';
+
+    if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) {
+      this.imageError = 'Selecione uma imagem JPG, PNG ou WebP.';
+      input.value = '';
+      return;
+    }
+
+    if (file.size > 8 * 1024 * 1024) {
+      this.imageError = 'A imagem original deve ter no máximo 8 MB.';
+      input.value = '';
+      return;
+    }
+
+    this.isProcessingImage = true;
+
+    try {
+      const optimized = await this.optimizeImage(file);
+      this.form.imageUrl = optimized.dataUrl;
+      this.imageMessage = `Imagem pronta · ${this.formatBytes(optimized.size)} em WebP.`;
+    } catch (error) {
+      this.imageError = error instanceof Error ? error.message : 'Não foi possível processar a imagem.';
+      input.value = '';
+    } finally {
+      this.isProcessingImage = false;
+    }
+  }
+
+  removeImage(input: HTMLInputElement): void {
+    this.form.imageUrl = null;
+    this.imageMessage = 'Imagem removida. Salve o produto para confirmar.';
+    this.imageError = '';
+    input.value = '';
   }
 
   async saveProduct(): Promise<void> {
@@ -322,6 +402,81 @@ export class ProductFormPageComponent implements OnInit {
     this.productOptionGroups.forEach((group) => {
       this.optionDrafts[group.id] ??= { name: '', additionalPrice: 0 };
     });
+  }
+
+  private async optimizeImage(file: File): Promise<{ dataUrl: string; size: number }> {
+    const source = await this.loadImage(file);
+    const maxDimension = 1200;
+    const scale = Math.min(1, maxDimension / Math.max(source.naturalWidth, source.naturalHeight));
+    let width = Math.max(1, Math.round(source.naturalWidth * scale));
+    let height = Math.max(1, Math.round(source.naturalHeight * scale));
+    const maxBytes = 180 * 1024;
+    let blob: Blob | null = null;
+
+    for (let resizeAttempt = 0; resizeAttempt < 5; resizeAttempt += 1) {
+      const canvas = document.createElement('canvas');
+      canvas.width = width;
+      canvas.height = height;
+      const context = canvas.getContext('2d', { alpha: false });
+      if (!context) throw new Error('Seu navegador não conseguiu processar a imagem.');
+
+      context.fillStyle = '#ffffff';
+      context.fillRect(0, 0, width, height);
+      context.drawImage(source, 0, 0, width, height);
+
+      for (const quality of [0.86, 0.78, 0.7, 0.62, 0.54, 0.46]) {
+        blob = await this.canvasToBlob(canvas, quality);
+        if (blob.size <= maxBytes) {
+          return { dataUrl: await this.blobToDataUrl(blob), size: blob.size };
+        }
+      }
+
+      width = Math.max(420, Math.round(width * 0.82));
+      height = Math.max(420, Math.round(height * 0.82));
+    }
+
+    if (!blob) throw new Error('Não foi possível converter a imagem.');
+    throw new Error('A imagem ficou muito pesada mesmo após a otimização. Escolha outra foto.');
+  }
+
+  private loadImage(file: File): Promise<HTMLImageElement> {
+    return new Promise((resolve, reject) => {
+      const image = new Image();
+      const objectUrl = URL.createObjectURL(file);
+
+      image.onload = () => {
+        URL.revokeObjectURL(objectUrl);
+        resolve(image);
+      };
+      image.onerror = () => {
+        URL.revokeObjectURL(objectUrl);
+        reject(new Error('O arquivo selecionado não é uma imagem válida.'));
+      };
+      image.src = objectUrl;
+    });
+  }
+
+  private canvasToBlob(canvas: HTMLCanvasElement, quality: number): Promise<Blob> {
+    return new Promise((resolve, reject) => {
+      canvas.toBlob(
+        (blob) => blob ? resolve(blob) : reject(new Error('Não foi possível converter a imagem para WebP.')),
+        'image/webp',
+        quality
+      );
+    });
+  }
+
+  private blobToDataUrl(blob: Blob): Promise<string> {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(String(reader.result));
+      reader.onerror = () => reject(new Error('Não foi possível gerar o Base64 da imagem.'));
+      reader.readAsDataURL(blob);
+    });
+  }
+
+  private formatBytes(bytes: number): string {
+    return bytes < 1024 ? `${bytes} B` : `${Math.round(bytes / 1024)} KB`;
   }
 
   private blankProductForm(): Product {

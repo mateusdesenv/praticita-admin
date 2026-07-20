@@ -31,26 +31,30 @@ import { AuthService } from '../../../../core/services/auth.service';
           </div>
 
           <nav aria-label="Seções do painel">
-            <a routerLink="/admin" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">
+            @if (auth.canRead('dashboard')) { <a routerLink="/admin" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">
               <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 13h6V4H4v9Zm0 7h6v-5H4v5Zm10 0h6v-9h-6v9Zm0-16v5h6V4h-6Z"/></svg>
               <span>Visão geral</span>
-            </a>
-            <a routerLink="/admin/categorias" routerLinkActive="active">
+            </a> }
+            @if (auth.canRead('categories')) { <a routerLink="/admin/categorias" routerLinkActive="active">
               <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h7v6H4V5Zm9 0h7v6h-7V5ZM4 13h7v6H4v-6Zm9 0h7v6h-7v-6Z"/></svg>
               <span>Categorias</span>
-            </a>
-            <a routerLink="/admin/produtos" routerLinkActive="active">
+            </a> }
+            @if (auth.canRead('products')) { <a routerLink="/admin/produtos" routerLinkActive="active">
               <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m12 3 8 4.5v9L12 21l-8-4.5v-9L12 3Zm0 2.3L6.2 8.5 12 11.7l5.8-3.2L12 5.3Zm-6 4.9v5.1l5 2.8V13l-5-2.8Zm7 7.9 5-2.8v-5.1L13 13v5.1Z"/></svg>
               <span>Produtos</span>
-            </a>
-            <a routerLink="/admin/configuracoes" routerLinkActive="active">
+            </a> }
+            @if (auth.canRead('collaborators')) { <a routerLink="/admin/colaboradores" routerLinkActive="active">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M16 11c1.7 0 3-1.3 3-3s-1.3-3-3-3-3 1.3-3 3 1.3 3 3 3ZM8 11c1.7 0 3-1.3 3-3S9.7 5 8 5 5 6.3 5 8s1.3 3 3 3Zm0 2c-2.3 0-7 1.2-7 3.5V19h10v-2.5c0-.8.3-1.6.8-2.2C10.5 13.4 9 13 8 13Zm8 0c-.9 0-1.9.2-2.8.5 1.1.8 1.8 1.8 1.8 3V19h8v-2.5c0-2.3-4.7-3.5-7-3.5Z"/></svg>
+              <span>Colaboradores</span>
+            </a> }
+            @if (auth.canRead('settings')) { <a routerLink="/admin/configuracoes" routerLinkActive="active">
               <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8Zm9 4c0-.6-.1-1.2-.2-1.8l2-1.6-2-3.4-2.4 1a9.4 9.4 0 0 0-3.1-1.8L15 2h-4l-.4 2.4a9.4 9.4 0 0 0-3.1 1.8l-2.4-1-2 3.4 2 1.6A9.8 9.8 0 0 0 5 12c0 .6.1 1.2.2 1.8l-2 1.6 2 3.4 2.4-1a9.4 9.4 0 0 0 3.1 1.8L11 22h4l.4-2.4a9.4 9.4 0 0 0 3.1-1.8l2.4 1 2-3.4-2-1.6c.1-.6.2-1.2.2-1.8Zm-9 6a6 6 0 1 1 0-12 6 6 0 0 1 0 12Z"/></svg>
               <span>Configurações</span>
-            </a>
-            <a routerLink="/admin/importar-exportar" routerLinkActive="active">
+            </a> }
+            @if (auth.canRead('backup')) { <a routerLink="/admin/importar-exportar" routerLinkActive="active">
               <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M11 15V6.8L8.4 9.4 7 8l5-5 5 5-1.4 1.4L13 6.8V15h-2Zm-6 6a2 2 0 0 1-2-2v-5h2v5h14v-5h2v5a2 2 0 0 1-2 2H5Z"/></svg>
               <span>Dados e backup</span>
-            </a>
+            </a> }
           </nav>
 
           <a class="admin-public-link" routerLink="/">
@@ -64,7 +68,7 @@ import { AuthService } from '../../../../core/services/auth.service';
               @if (user.photoURL) {
                 <img [src]="user.photoURL" alt="">
               } @else {
-                <span class="admin-user-fallback" aria-hidden="true">{{ user.displayName?.charAt(0) || 'P' }}</span>
+                <span class="admin-user-fallback" aria-hidden="true">{{ user.displayName.charAt(0) || 'P' }}</span>
               }
               <span>
                 <strong>{{ user.displayName || 'Conta Google' }}</strong>

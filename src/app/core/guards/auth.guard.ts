@@ -7,8 +7,9 @@ export const authGuard: CanActivateFn = async (_route, state) => {
   const router = inject(Router);
   const user = await auth.waitUntilReady();
 
+  const screen = _route.data?.['permission'] as Parameters<AuthService['canRead']>[0] | undefined;
   return user
-    ? true
+    ? (!screen || auth.canRead(screen) ? true : router.createUrlTree(['/admin']))
     : router.createUrlTree(['/admin/login'], { queryParams: { returnUrl: state.url } });
 };
 
