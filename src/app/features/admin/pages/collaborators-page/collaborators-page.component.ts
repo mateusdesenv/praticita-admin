@@ -13,6 +13,7 @@ const SCREENS: Array<{ key: PermissionScreen; label: string }> = [
   { key: 'dashboard', label: 'Visão geral' },
   { key: 'categories', label: 'Categorias' },
   { key: 'products', label: 'Produtos' },
+  { key: 'finance', label: 'Financeiro' },
   { key: 'collaborators', label: 'Colaboradores' },
   { key: 'settings', label: 'Configurações' },
   { key: 'backup', label: 'Dados e backup' }
@@ -51,15 +52,21 @@ const SCREENS: Array<{ key: PermissionScreen; label: string }> = [
                       @if (item.photoURL) { <img [src]="item.photoURL" alt=""> }
                       @else { {{ item.name.charAt(0).toUpperCase() }} }
                     </span>
-                    <span><strong>{{ item.name }}</strong><br><small>{{ item.provider === 'google' ? 'Conta Google' : 'CPF e senha' }}</small></span>
+                    <span><strong>{{ item.name }}</strong><br><small>{{ item.accessStatus === 'pending' ? 'Solicitação via Google' : item.provider === 'google' ? 'Conta Google' : 'CPF e senha' }}</small></span>
                   </div>
                 </td>
                 <td>{{ item.email || formatCpf(item.cpf) }}</td>
                 <td><span class="role-badge">{{ roleLabel(item.role) }}</span></td>
-                <td><span class="badge" [class.success]="item.isActive">{{ item.isActive ? 'Ativo' : 'Inativo' }}</span></td>
+                <td><span class="badge" [class.success]="item.isActive" [class.pending]="item.accessStatus === 'pending'">{{ statusLabel(item) }}</span></td>
                 <td>
                   @if (auth.canWrite('collaborators')) {
-                    <button class="button-ghost" type="button" (click)="edit(item)">Editar acesso</button>
+                    @if (item.accessStatus === 'pending') {
+                      <button class="button pending-approve-button" type="button" (click)="approve(item)" [disabled]="approvingId() === item.id">
+                        {{ approvingId() === item.id ? 'Liberando...' : 'Liberar acesso' }}
+                      </button>
+                    } @else {
+                      <button class="button-ghost" type="button" (click)="edit(item)">Editar acesso</button>
+                    }
                   } @else { <small>Somente leitura</small> }
                 </td>
               </tr>
@@ -87,6 +94,15 @@ const SCREENS: Array<{ key: PermissionScreen; label: string }> = [
 
           <div class="admin-modal-body">
             <div class="collaborator-form-grid">
+              @if (!editingId) {
+                <div class="form-field">
+                  <label for="collaborator-provider">Forma de acesso</label>
+                  <select id="collaborator-provider" class="form-control" [(ngModel)]="form.provider" (ngModelChange)="providerChanged($event)">
+                    <option value="cpf">CPF e senha</option>
+                    <option value="google">Conta Google (admin)</option>
+                  </select>
+                </div>
+              }
               <div class="form-field">
                 <label for="collaborator-name">Nome</label>
                 <input id="collaborator-name" class="form-control" [(ngModel)]="form.name" autocomplete="name" maxlength="120">
@@ -104,8 +120,9 @@ const SCREENS: Array<{ key: PermissionScreen; label: string }> = [
                 </div>
               } @else {
                 <div class="form-field">
-                  <label>E-mail Google</label>
-                  <input class="form-control" [value]="form.email" disabled>
+                  <label for="collaborator-email">E-mail Google</label>
+                  <input id="collaborator-email" class="form-control" type="email" [(ngModel)]="form.email"
+                    [disabled]="!!editingId" autocomplete="email" maxlength="254" placeholder="nome&#64;gmail.com">
                 </div>
               }
               <div class="form-field">
@@ -163,6 +180,7 @@ export class CollaboratorsPageComponent implements OnInit {
   readonly message = signal('');
   readonly error = signal('');
   readonly modalError = signal('');
+  readonly approvingId = signal<string | null>(null);
   editingId: string | null = null;
   form = this.blankForm();
 
@@ -215,6 +233,11 @@ export class CollaboratorsPageComponent implements OnInit {
     this.form.permissions = this.permissionsFor(role);
   }
 
+  providerChanged(provider: 'cpf' | 'google'): void {
+    this.form.provider = provider;
+    if (provider === 'google') this.applyRolePreset('admin');
+  }
+
   readChanged(screen: PermissionScreen): void {
     if (!this.form.permissions[screen].read) this.form.permissions[screen].write = false;
   }
@@ -227,7 +250,8 @@ export class CollaboratorsPageComponent implements OnInit {
     this.modalError.set('');
     if (!this.form.name.trim()) return this.modalError.set('Informe o nome.');
     if (this.form.provider === 'cpf' && this.form.cpf.replace(/\D/g, '').length !== 11) return this.modalError.set('Informe um CPF completo.');
-    if (!this.editingId && this.form.password.length < 6) return this.modalError.set('A senha deve ter no mínimo 6 caracteres.');
+    if (this.form.provider === 'google' && !/^\S+@\S+\.\S+$/.test(this.form.email.trim())) return this.modalError.set('Informe um e-mail Google válido.');
+    if (!this.editingId && this.form.provider === 'cpf' && this.form.password.length < 6) return this.modalError.set('A senha deve ter no mínimo 6 caracteres.');
     this.saving.set(true);
     try {
       const payload = {
@@ -239,6 +263,7 @@ export class CollaboratorsPageComponent implements OnInit {
         isActive: this.form.isActive
       };
       if (this.editingId) await this.service.update(this.editingId, payload);
+      else if (this.form.provider === 'google') await this.service.createGoogleAccess({ name: this.form.name, email: this.form.email });
       else await this.service.create(payload);
       this.message.set(this.editingId ? 'Acesso atualizado.' : 'Colaborador cadastrado.');
       this.closeModal();
@@ -259,12 +284,30 @@ export class CollaboratorsPageComponent implements OnInit {
     } catch (error) { this.modalError.set(error instanceof Error ? error.message : 'Não foi possível excluir.'); }
   }
 
+  async approve(item: Collaborator): Promise<void> {
+    this.error.set('');
+    this.message.set('');
+    this.approvingId.set(item.id);
+    try {
+      await this.service.approve(item.id);
+      this.message.set(`Acesso de ${item.name} liberado como admin.`);
+      await this.load();
+    } catch (error) {
+      this.error.set(error instanceof Error ? error.message : 'Não foi possível liberar o acesso.');
+    } finally { this.approvingId.set(null); }
+  }
+
   formatCpf(cpf: string | null): string {
     return cpf?.replace(/^(\d{3})(\d{3})(\d{3})(\d{2})$/, '$1.$2.$3-$4') || '—';
   }
 
   roleLabel(role: CollaboratorRole): string {
-    return { admin: 'Admin', cozinheiro: 'Cozinheiro', financeiro: 'Financeiro' }[role];
+    return { admin: 'Admin', cozinheiro: 'Cozinheiro', financeiro: 'Financeiro', convidado: 'Convidado' }[role];
+  }
+
+  statusLabel(item: Collaborator): string {
+    if (item.accessStatus === 'pending') return 'Aguardando liberação';
+    return item.isActive ? 'Ativo' : 'Inativo';
   }
 
   private blankForm() {
@@ -282,11 +325,10 @@ export class CollaboratorsPageComponent implements OnInit {
       all.dashboard.read = true;
       all.categories.read = true;
       all.products = { read: true, write: true };
-    } else {
+    } else if (role === 'financeiro') {
       all.dashboard.read = true;
       all.products.read = true;
-      all.settings.read = true;
-      all.backup.read = true;
+      all.finance = { read: true, write: true };
     }
     return all;
   }

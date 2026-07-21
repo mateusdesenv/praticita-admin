@@ -9,13 +9,16 @@ import { ProductFormPageComponent } from './features/admin/pages/product-form-pa
 import { BusinessSettingsPageComponent } from './features/admin/pages/business-settings-page/business-settings-page.component';
 import { ImportExportPageComponent } from './features/admin/pages/import-export-page/import-export-page.component';
 import { LoginPageComponent } from './features/auth/pages/login-page/login-page.component';
+import { PendingAccessPageComponent } from './features/auth/pages/pending-access-page/pending-access-page.component';
 import { CollaboratorsPageComponent } from './features/admin/pages/collaborators-page/collaborators-page.component';
+import { FinancePageComponent } from './features/admin/pages/finance-page/finance-page.component';
 import { authGuard, guestGuard } from './core/guards/auth.guard';
 
 export const routes: Routes = [
   { path: '', component: PublicMenuPageComponent },
   { path: 'produto/:slug', component: ProductDetailPageComponent },
   { path: 'admin/login', component: LoginPageComponent, canActivate: [guestGuard] },
+  { path: 'admin/aguardando-liberacao', component: PendingAccessPageComponent, canActivate: [guestGuard] },
   {
     path: 'admin',
     component: AdminLayoutComponent,
@@ -26,6 +29,10 @@ export const routes: Routes = [
       { path: 'produtos', component: ProductsPageComponent, canActivate: [authGuard], data: { permission: 'products' } },
       { path: 'produtos/novo', component: ProductFormPageComponent, canActivate: [authGuard], data: { permission: 'products' } },
       { path: 'produtos/:id', component: ProductFormPageComponent, canActivate: [authGuard], data: { permission: 'products' } },
+      { path: 'financeiro', redirectTo: 'financeiro/contas-a-pagar', pathMatch: 'full' },
+      { path: 'financeiro/contas-a-pagar', component: FinancePageComponent, canActivate: [authGuard], data: { permission: 'finance', financeType: 'payable' } },
+      { path: 'financeiro/contas-a-receber', component: FinancePageComponent, canActivate: [authGuard], data: { permission: 'finance', financeType: 'receivable' } },
+      { path: 'financeiro/notas-fiscais-entrada', component: FinancePageComponent, canActivate: [authGuard], data: { permission: 'finance', financeType: 'supplier_invoice' } },
       { path: 'colaboradores', component: CollaboratorsPageComponent, canActivate: [authGuard], data: { permission: 'collaborators' } },
       { path: 'configuracoes', component: BusinessSettingsPageComponent, canActivate: [authGuard], data: { permission: 'settings' } },
       { path: 'importar-exportar', component: ImportExportPageComponent, canActivate: [authGuard], data: { permission: 'backup' } }

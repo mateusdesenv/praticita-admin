@@ -2,7 +2,7 @@ import { Component, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { FirebaseError } from 'firebase/app';
-import { AuthService } from '../../../../core/services/auth.service';
+import { AuthService, GoogleAccessPendingError } from '../../../../core/services/auth.service';
 
 @Component({
   selector: 'app-login-page',
@@ -137,6 +137,10 @@ export class LoginPageComponent {
       await this.auth.signInWithGoogle();
       await this.navigateAfterLogin();
     } catch (error) {
+      if (error instanceof GoogleAccessPendingError) {
+        await this.router.navigate(['/admin/aguardando-liberacao'], { queryParams: { email: error.email } });
+        return;
+      }
       const code = error instanceof FirebaseError ? error.code : '';
       if (code !== 'auth/popup-closed-by-user' && code !== 'auth/cancelled-popup-request') {
         this.errorMessage.set(

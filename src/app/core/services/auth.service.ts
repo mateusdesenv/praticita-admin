@@ -26,21 +26,24 @@ export interface AuthUser {
 interface CollaboratorSession {
   token: string;
   expiresAt: string;
-  user: { id: string; name: string; cpf: string; role: CollaboratorRole; permissions: Permissions };
+  user: { id: string; name: string; cpf: string | null; email: string | null; photoURL: string | null; provider: 'cpf' | 'google'; role: CollaboratorRole; permissions: Permissions };
+}
+
+export class GoogleAccessPendingError extends Error {
+  constructor(readonly email: string) {
+    super('Seu acesso está aguardando liberação do administrador.');
+    this.name = 'GoogleAccessPendingError';
+  }
 }
 
 const COLLABORATOR_SESSION_KEY = 'praticita_collaborator_session';
-const allPermissions = (): Permissions => Object.fromEntries(
-  ['dashboard', 'categories', 'products', 'collaborators', 'settings', 'backup']
-    .map((screen) => [screen, { read: true, write: true }])
-) as Permissions;
-
 @Injectable({ providedIn: 'root' })
 export class AuthService {
   private readonly app: FirebaseApp = initializeApp(environment.firebase);
   private readonly auth: Auth = getAuth(this.app);
   private readonly currentUser = signal<AuthUser | null>(this.readCollaboratorUser());
   private readonly initialized = signal(false);
+  private interactiveGoogleSignIn = false;
 
   readonly user = this.currentUser.asReadonly();
   readonly ready = this.initialized.asReadonly();
@@ -48,21 +51,10 @@ export class AuthService {
   private readonly authReady = new Promise<AuthUser | null>((resolve) => {
     onAuthStateChanged(this.auth, async (firebaseUser) => {
       if (firebaseUser) {
-        const user: AuthUser = {
-          id: firebaseUser.uid,
-          displayName: firebaseUser.displayName || 'Conta Google',
-          email: firebaseUser.email || '',
-          photoURL: firebaseUser.photoURL,
-          provider: 'google',
-          role: 'admin',
-          permissions: allPermissions()
-        };
-        const synced = await this.syncGoogleUser(firebaseUser.uid, user.displayName, user.email, user.photoURL);
-        if (synced) {
-          user.role = synced.role;
-          user.permissions = synced.permissions;
+        if (!this.interactiveGoogleSignIn) {
+          try { this.currentUser.set(await this.authorizeGoogleUser(firebaseUser)); }
+          catch { await signOut(this.auth); this.currentUser.set(null); }
         }
-        this.currentUser.set(user);
       } else {
         this.currentUser.set(this.readCollaboratorUser());
       }
@@ -79,29 +71,20 @@ export class AuthService {
     await setPersistence(this.auth, browserLocalPersistence);
     const provider = new GoogleAuthProvider();
     provider.setCustomParameters({ prompt: 'select_account' });
-    const credential = await signInWithPopup(this.auth, provider);
+    this.interactiveGoogleSignIn = true;
+    let credential;
+    try { credential = await signInWithPopup(this.auth, provider); }
+    finally { this.interactiveGoogleSignIn = false; }
     localStorage.removeItem(COLLABORATOR_SESSION_KEY);
-    const user: AuthUser = {
-      id: credential.user.uid,
-      displayName: credential.user.displayName || 'Conta Google',
-      email: credential.user.email || '',
-      photoURL: credential.user.photoURL,
-      provider: 'google',
-      role: 'admin',
-      permissions: allPermissions()
-    };
-    const synced = await this.syncGoogleUser(
-      credential.user.uid,
-      user.displayName,
-      user.email,
-      user.photoURL
-    );
-    if (synced) {
-      user.role = synced.role;
-      user.permissions = synced.permissions;
+    try {
+      const user = await this.authorizeGoogleUser(credential.user);
+      this.currentUser.set(user);
+      return user;
+    } catch (error) {
+      await signOut(this.auth);
+      this.currentUser.set(null);
+      throw error;
     }
-    this.currentUser.set(user);
-    return user;
   }
 
   async signInWithCpf(cpf: string, password: string): Promise<AuthUser> {
@@ -172,9 +155,9 @@ export class AuthService {
     return {
       id: session.user.id,
       displayName: session.user.name,
-      email: this.formatCpf(session.user.cpf),
-      photoURL: null,
-      provider: 'collaborator',
+      email: session.user.provider === 'google' ? (session.user.email || '') : this.formatCpf(session.user.cpf || ''),
+      photoURL: session.user.photoURL,
+      provider: session.user.provider === 'google' ? 'google' : 'collaborator',
       role: session.user.role,
       permissions: session.user.permissions
     };
@@ -184,21 +167,18 @@ export class AuthService {
     return cpf.replace(/^(\d{3})(\d{3})(\d{3})(\d{2})$/, '$1.$2.$3-$4');
   }
 
-  private async syncGoogleUser(firebaseUid: string, name: string, email: string, photoURL: string | null): Promise<{ role: CollaboratorRole; permissions: Permissions } | null> {
-    try {
-      const token = environment.apiAdminToken?.trim() || '';
-      const response = await fetch(`${environment.apiBaseUrl.replace(/\/+$/, '')}/auth/google-user`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          ...(token ? { Authorization: `Bearer ${token}` } : {})
-        },
-        body: JSON.stringify({ firebaseUid, name, email, photoURL })
-      });
-      if (!response.ok) return null;
-      return response.json();
-    } catch {
-      return null;
+  private async authorizeGoogleUser(firebaseUser: import('firebase/auth').User): Promise<AuthUser> {
+    const response = await fetch(`${environment.apiBaseUrl.replace(/\/+$/, '')}/auth/google`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ idToken: await firebaseUser.getIdToken() })
+    });
+    const body = await response.json().catch(() => null);
+    if (response.status === 403 && body?.error === 'GOOGLE_ACCESS_PENDING') {
+      throw new GoogleAccessPendingError(firebaseUser.email || '');
     }
+    if (!response.ok) throw new Error(body?.message || 'Não foi possível validar seu acesso Google.');
+    const session = body as CollaboratorSession;
+    localStorage.setItem(COLLABORATOR_SESSION_KEY, JSON.stringify(session));
+    return this.mapCollaborator(session);
   }
 }

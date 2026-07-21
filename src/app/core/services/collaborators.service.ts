@@ -12,12 +12,13 @@ export interface Collaborator {
   role: CollaboratorRole;
   permissions: Permissions;
   isActive: boolean;
+  accessStatus: 'pending' | 'approved' | 'disabled';
   createdAt: string;
   updatedAt: string;
 }
 
-export type CollaboratorRole = 'admin' | 'cozinheiro' | 'financeiro';
-export type PermissionScreen = 'dashboard' | 'categories' | 'products' | 'collaborators' | 'settings' | 'backup';
+export type CollaboratorRole = 'admin' | 'cozinheiro' | 'financeiro' | 'convidado';
+export type PermissionScreen = 'dashboard' | 'categories' | 'products' | 'finance' | 'collaborators' | 'settings' | 'backup';
 export type Permissions = Record<PermissionScreen, { read: boolean; write: boolean }>;
 
 export interface CollaboratorInput {
@@ -28,6 +29,8 @@ export interface CollaboratorInput {
   role: CollaboratorRole;
   permissions: Permissions;
 }
+
+export interface GoogleAccessInput { name: string; email: string; }
 
 @Injectable({ providedIn: 'root' })
 export class CollaboratorsService {
@@ -42,6 +45,16 @@ export class CollaboratorsService {
   create(input: CollaboratorInput): Promise<Collaborator> {
     this.assertCanWrite();
     return this.request('/collaborators', { method: 'POST', body: JSON.stringify(input) });
+  }
+
+  createGoogleAccess(input: GoogleAccessInput): Promise<Collaborator> {
+    this.assertCanWrite();
+    return this.request('/collaborators/google-access', { method: 'POST', body: JSON.stringify(input) });
+  }
+
+  approve(id: string): Promise<Collaborator> {
+    this.assertCanWrite();
+    return this.request(`/collaborators/${id}/approve`, { method: 'POST' });
   }
 
   update(id: string, input: CollaboratorInput): Promise<Collaborator> {

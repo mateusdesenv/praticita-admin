@@ -380,6 +380,7 @@ textarea.form-control { min-height: 96px; resize: vertical; }
 }
 .admin-sidebar h2 { margin: 6px 0 18px; font-size: 1.25rem; }
 .admin-sidebar nav { display: grid; gap: 8px; }
+.admin-nav-label { padding: 12px 12px 2px; color: rgba(255,255,255,.46); font-size: .68rem; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; }
 .admin-sidebar a { border-radius: 14px; padding: 11px 12px; color: rgba(255,255,255,.80); }
 .admin-sidebar a.active, .admin-sidebar a:hover { background: rgba(255,255,255,.12); color: #fff; }
 .admin-content { min-width: 0; }
@@ -587,6 +588,83 @@ th { color: var(--color-muted); font-size: .78rem; text-transform: uppercase; le
 .admin-sidebar nav {
   display: grid;
   gap: 5px;
+}
+
+.admin-nav-group {
+  display: grid;
+  gap: 3px;
+}
+
+.admin-nav-group-trigger {
+  width: 100%;
+  min-height: 46px;
+  padding: 10px 12px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  border: 0;
+  border-radius: 13px;
+  color: rgba(255, 255, 255, .72);
+  background: transparent;
+  font-size: .94rem;
+  font-weight: 700;
+  text-align: left;
+  transition: color .18s ease, background .18s ease;
+}
+
+.admin-nav-group-trigger:hover,
+.admin-nav-group-trigger:focus-visible,
+.admin-nav-group.current > .admin-nav-group-trigger {
+  color: #fff;
+  background: rgba(255, 255, 255, .07);
+}
+
+.admin-nav-group-trigger > svg:first-child {
+  width: 20px;
+  height: 20px;
+  flex: 0 0 20px;
+  fill: currentColor;
+}
+
+.admin-nav-group-trigger span {
+  flex: 1;
+}
+
+.admin-nav-chevron {
+  width: 17px;
+  height: 17px;
+  flex: 0 0 17px;
+  fill: currentColor;
+  transition: transform .18s ease;
+}
+
+.admin-nav-group.open .admin-nav-chevron {
+  transform: rotate(180deg);
+}
+
+.admin-nav-submenu {
+  display: grid;
+  gap: 3px;
+  padding: 2px 0 5px 14px;
+  margin-left: 21px;
+  border-left: 1px solid rgba(255, 255, 255, .12);
+}
+
+.admin-nav-submenu[hidden] {
+  display: none;
+}
+
+.admin-sidebar nav .admin-nav-submenu a {
+  min-height: 40px;
+  padding-block: 8px;
+  font-size: .86rem;
+  font-weight: 600;
+}
+
+.admin-sidebar nav .admin-nav-submenu a svg {
+  width: 17px;
+  height: 17px;
+  flex-basis: 17px;
 }
 
 .admin-sidebar nav a,
@@ -1197,6 +1275,18 @@ th { color: var(--color-muted); font-size: .78rem; text-transform: uppercase; le
   top: 20px;
 }
 
+.badge.pending {
+  color: #8a5a13;
+  background: #fff0c9;
+  border-color: #edcf82;
+}
+
+.pending-approve-button {
+  min-width: 132px;
+  justify-content: center;
+  white-space: nowrap;
+}
+
 .collaborator-form-card .form-field {
   margin-bottom: 15px;
 }
@@ -1292,6 +1382,24 @@ th { color: var(--color-muted); font-size: .78rem; text-transform: uppercase; le
   font-size: .86rem;
   font-weight: 700;
 }
+
+.pending-access-page {
+  min-height: 100vh; display: grid; place-items: center; padding: 24px;
+  background: radial-gradient(circle at top, #fff8e8 0, #f6ead7 48%, #ead7bd 100%);
+}
+.pending-access-card {
+  width: min(100%, 560px); padding: clamp(28px, 6vw, 52px); border-radius: 28px;
+  background: rgba(255, 253, 248, .96); box-shadow: 0 24px 70px rgba(71, 43, 25, .16);
+  text-align: center; border: 1px solid rgba(121, 79, 43, .12);
+}
+.pending-access-card .admin-login-brand { justify-content: center; margin-bottom: 32px; color: #4b2e1d; }
+.pending-access-icon { width: 72px; height: 72px; display: grid; place-items: center; margin: 0 auto 20px; border-radius: 50%; background: #f3e3bd; font-size: 32px; }
+.pending-access-card h1 { margin: 8px 0 16px; color: #3f291c; font-size: clamp(1.8rem, 5vw, 2.5rem); line-height: 1.08; }
+.pending-access-card p { color: #725d4e; line-height: 1.65; }
+.pending-access-email { display: block; margin: 20px 0; padding: 12px; border-radius: 12px; background: #f8f0e4; color: #533725; overflow-wrap: anywhere; }
+.pending-access-help { font-size: .94rem; }
+.pending-access-action { display: inline-flex; margin: 14px 0 18px; }
+.pending-access-card .admin-login-back { display: block; }
 
 @media (max-width: 900px) {
   .admin-login-page {
@@ -2031,6 +2139,18 @@ th { color: var(--color-muted); font-size: .78rem; text-transform: uppercase; le
   .admin-sidebar nav a {
     flex: 0 0 auto;
     justify-content: center;
+  }
+
+  .admin-nav-group {
+    flex: 0 0 auto;
+  }
+
+  .admin-nav-group-trigger {
+    white-space: nowrap;
+  }
+
+  .admin-nav-submenu {
+    margin-left: 18px;
   }
 
   .admin-public-link {

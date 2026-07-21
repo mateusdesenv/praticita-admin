@@ -35,26 +35,47 @@ import { AuthService } from '../../../../core/services/auth.service';
               <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 13h6V4H4v9Zm0 7h6v-5H4v5Zm10 0h6v-9h-6v9Zm0-16v5h6V4h-6Z"/></svg>
               <span>Visão geral</span>
             </a> }
-            @if (auth.canRead('categories')) { <a routerLink="/admin/categorias" routerLinkActive="active">
-              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h7v6H4V5Zm9 0h7v6h-7V5ZM4 13h7v6H4v-6Zm9 0h7v6h-7v-6Z"/></svg>
-              <span>Categorias</span>
-            </a> }
-            @if (auth.canRead('products')) { <a routerLink="/admin/produtos" routerLinkActive="active">
-              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m12 3 8 4.5v9L12 21l-8-4.5v-9L12 3Zm0 2.3L6.2 8.5 12 11.7l5.8-3.2L12 5.3Zm-6 4.9v5.1l5 2.8V13l-5-2.8Zm7 7.9 5-2.8v-5.1L13 13v5.1Z"/></svg>
-              <span>Produtos</span>
-            </a> }
-            @if (auth.canRead('collaborators')) { <a routerLink="/admin/colaboradores" routerLinkActive="active">
-              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M16 11c1.7 0 3-1.3 3-3s-1.3-3-3-3-3 1.3-3 3 1.3 3 3 3ZM8 11c1.7 0 3-1.3 3-3S9.7 5 8 5 5 6.3 5 8s1.3 3 3 3Zm0 2c-2.3 0-7 1.2-7 3.5V19h10v-2.5c0-.8.3-1.6.8-2.2C10.5 13.4 9 13 8 13Zm8 0c-.9 0-1.9.2-2.8.5 1.1.8 1.8 1.8 1.8 3V19h8v-2.5c0-2.3-4.7-3.5-7-3.5Z"/></svg>
-              <span>Colaboradores</span>
-            </a> }
-            @if (auth.canRead('settings')) { <a routerLink="/admin/configuracoes" routerLinkActive="active">
-              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8Zm9 4c0-.6-.1-1.2-.2-1.8l2-1.6-2-3.4-2.4 1a9.4 9.4 0 0 0-3.1-1.8L15 2h-4l-.4 2.4a9.4 9.4 0 0 0-3.1 1.8l-2.4-1-2 3.4 2 1.6A9.8 9.8 0 0 0 5 12c0 .6.1 1.2.2 1.8l-2 1.6 2 3.4 2.4-1a9.4 9.4 0 0 0 3.1 1.8L11 22h4l.4-2.4a9.4 9.4 0 0 0 3.1-1.8l2.4 1 2-3.4-2-1.6c.1-.6.2-1.2.2-1.8Zm-9 6a6 6 0 1 1 0-12 6 6 0 0 1 0 12Z"/></svg>
-              <span>Configurações</span>
-            </a> }
-            @if (auth.canRead('backup')) { <a routerLink="/admin/importar-exportar" routerLinkActive="active">
-              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M11 15V6.8L8.4 9.4 7 8l5-5 5 5-1.4 1.4L13 6.8V15h-2Zm-6 6a2 2 0 0 1-2-2v-5h2v5h14v-5h2v5a2 2 0 0 1-2 2H5Z"/></svg>
-              <span>Dados e backup</span>
-            </a> }
+
+            @if (auth.canRead('categories') || auth.canRead('products')) {
+              <section class="admin-nav-group" [class.open]="openGroups.catalog" [class.current]="isGroupActive('catalog')">
+                <button type="button" class="admin-nav-group-trigger" (click)="toggleGroup('catalog')" [attr.aria-expanded]="openGroups.catalog" aria-controls="admin-nav-catalog">
+                  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 5h7l2 2h9v12H3V5Zm2 2v10h14V9h-8l-2-2H5Z"/></svg>
+                  <span>Catálogo</span><svg class="admin-nav-chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="m7 10 5 5 5-5H7Z"/></svg>
+                </button>
+                <div class="admin-nav-submenu" id="admin-nav-catalog" [attr.hidden]="openGroups.catalog ? null : ''">
+                  @if (auth.canRead('categories')) { <a routerLink="/admin/categorias" routerLinkActive="active"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h7v6H4V5Zm9 0h7v6h-7V5ZM4 13h7v6H4v-6Zm9 0h7v6h-7v-6Z"/></svg><span>Categorias</span></a> }
+                  @if (auth.canRead('products')) { <a routerLink="/admin/produtos" routerLinkActive="active"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m12 3 8 4.5v9L12 21l-8-4.5v-9L12 3Zm0 2.3L6.2 8.5 12 11.7l5.8-3.2L12 5.3Zm-6 4.9v5.1l5 2.8V13l-5-2.8Zm7 7.9 5-2.8v-5.1L13 13v5.1Z"/></svg><span>Produtos</span></a> }
+                </div>
+              </section>
+            }
+
+            @if (auth.canRead('finance')) {
+              <section class="admin-nav-group" [class.open]="openGroups.finance" [class.current]="isGroupActive('finance')">
+                <button type="button" class="admin-nav-group-trigger" (click)="toggleGroup('finance')" [attr.aria-expanded]="openGroups.finance" aria-controls="admin-nav-finance">
+                  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16v14H4V5Zm2 2v10h12V7H6Zm2 3h8v2H8v-2Z"/></svg>
+                  <span>Financeiro</span><svg class="admin-nav-chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="m7 10 5 5 5-5H7Z"/></svg>
+                </button>
+                <div class="admin-nav-submenu" id="admin-nav-finance" [attr.hidden]="openGroups.finance ? null : ''">
+                  <a routerLink="/admin/financeiro/contas-a-pagar" routerLinkActive="active"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4h16v16H4V4Zm2 2v12h12V6H6Zm3 3h6v2H9V9Zm0 4h6v2H9v-2Z"/></svg><span>Contas a pagar</span></a>
+                  <a routerLink="/admin/financeiro/contas-a-receber" routerLinkActive="active"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M11 4h2v3h3v2h-3v3h-2V9H8V7h3V4ZM5 13h14v7H5v-7Zm2 2v3h10v-3H7Z"/></svg><span>Contas a receber</span></a>
+                  <a routerLink="/admin/financeiro/notas-fiscais-entrada" routerLinkActive="active"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 2h9l4 4v16H6V2Zm2 2v16h9V7h-3V4H8Zm2 7h5v2h-5v-2Zm0 4h5v2h-5v-2Z"/></svg><span>Notas fiscais</span></a>
+                </div>
+              </section>
+            }
+
+            @if (auth.canRead('collaborators') || auth.canRead('settings') || auth.canRead('backup')) {
+              <section class="admin-nav-group" [class.open]="openGroups.admin" [class.current]="isGroupActive('admin')">
+                <button type="button" class="admin-nav-group-trigger" (click)="toggleGroup('admin')" [attr.aria-expanded]="openGroups.admin" aria-controls="admin-nav-administration">
+                  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 4 6v5c0 5.1 3.4 9.4 8 10 4.6-.6 8-4.9 8-10V6l-8-3Zm0 2.1L18 7v4c0 4-2.5 7.3-6 8-3.5-.7-6-4-6-8V7l6-1.9Z"/></svg>
+                  <span>Administração</span><svg class="admin-nav-chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="m7 10 5 5 5-5H7Z"/></svg>
+                </button>
+                <div class="admin-nav-submenu" id="admin-nav-administration" [attr.hidden]="openGroups.admin ? null : ''">
+                  @if (auth.canRead('collaborators')) { <a routerLink="/admin/colaboradores" routerLinkActive="active"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M16 11c1.7 0 3-1.3 3-3s-1.3-3-3-3-3 1.3-3 3 1.3 3 3 3ZM8 11c1.7 0 3-1.3 3-3S9.7 5 8 5 5 6.3 5 8s1.3 3 3 3Zm0 2c-2.3 0-7 1.2-7 3.5V19h10v-2.5c0-.8.3-1.6.8-2.2C10.5 13.4 9 13 8 13Zm8 0c-.9 0-1.9.2-2.8.5 1.1.8 1.8 1.8 1.8 3V19h8v-2.5c0-2.3-4.7-3.5-7-3.5Z"/></svg><span>Colaboradores</span></a> }
+                  @if (auth.canRead('settings')) { <a routerLink="/admin/configuracoes" routerLinkActive="active"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8Zm9 4c0-.6-.1-1.2-.2-1.8l2-1.6-2-3.4-2.4 1a9.4 9.4 0 0 0-3.1-1.8L15 2h-4l-.4 2.4a9.4 9.4 0 0 0-3.1 1.8l-2.4-1-2 3.4 2 1.6A9.8 9.8 0 0 0 5 12c0 .6.1 1.2.2 1.8l-2 1.6 2 3.4 2.4-1a9.4 9.4 0 0 0 3.1 1.8L11 22h4l.4-2.4a9.4 9.4 0 0 0 3.1-1.8l2.4 1 2-3.4-2-1.6c.1-.6.2-1.2.2-1.8Zm-9 6a6 6 0 1 1 0-12 6 6 0 0 1 0 12Z"/></svg><span>Configurações</span></a> }
+                  @if (auth.canRead('backup')) { <a routerLink="/admin/importar-exportar" routerLinkActive="active"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M11 15V6.8L8.4 9.4 7 8l5-5 5 5-1.4 1.4L13 6.8V15h-2Zm-6 6a2 2 0 0 1-2-2v-5h2v5h14v-5h2v5a2 2 0 0 1-2 2H5Z"/></svg><span>Dados e backup</span></a> }
+                </div>
+              </section>
+            }
           </nav>
 
           <a class="admin-public-link" routerLink="/">
@@ -89,10 +110,26 @@ import { AuthService } from '../../../../core/services/auth.service';
   `
 })
 export class AdminLayoutComponent {
+  readonly openGroups = { catalog: true, finance: true, admin: true };
+
   constructor(
     readonly auth: AuthService,
     private readonly router: Router
-  ) {}
+  ) {
+    if (this.router.url.startsWith('/admin/financeiro')) this.openGroups.finance = true;
+    if (['/admin/colaboradores', '/admin/configuracoes', '/admin/importar-exportar'].some((path) => this.router.url.startsWith(path))) this.openGroups.admin = true;
+  }
+
+  toggleGroup(group: keyof typeof this.openGroups): void {
+    this.openGroups[group] = !this.openGroups[group];
+  }
+
+  isGroupActive(group: keyof typeof this.openGroups): boolean {
+    const url = this.router.url;
+    if (group === 'catalog') return url.startsWith('/admin/categorias') || url.startsWith('/admin/produtos');
+    if (group === 'finance') return url.startsWith('/admin/financeiro');
+    return ['/admin/colaboradores', '/admin/configuracoes', '/admin/importar-exportar'].some((path) => url.startsWith(path));
+  }
 
   async logout(): Promise<void> {
     await this.auth.signOut();
