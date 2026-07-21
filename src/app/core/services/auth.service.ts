@@ -152,6 +152,16 @@ export class AuthService {
   }
 
   private mapCollaborator(session: CollaboratorSession): AuthUser {
+    const permissions = structuredClone(session.user.permissions);
+    // Sessões criadas antes do módulo Operação não possuem esta chave.
+    // Aplicamos o preset correspondente ao papel sem obrigar a pessoa a sair e entrar novamente.
+    if (!permissions.operations) {
+      permissions.operations = session.user.role === 'admin' || session.user.role === 'cozinheiro'
+        ? { read: true, write: true }
+        : session.user.role === 'financeiro'
+          ? { read: true, write: false }
+          : { read: false, write: false };
+    }
     return {
       id: session.user.id,
       displayName: session.user.name,
@@ -159,7 +169,7 @@ export class AuthService {
       photoURL: session.user.photoURL,
       provider: session.user.provider === 'google' ? 'google' : 'collaborator',
       role: session.user.role,
-      permissions: session.user.permissions
+      permissions
     };
   }
 

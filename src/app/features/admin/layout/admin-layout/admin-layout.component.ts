@@ -36,6 +36,21 @@ import { AuthService } from '../../../../core/services/auth.service';
               <span>Visão geral</span>
             </a> }
 
+            @if (auth.canRead('operations')) {
+              <section class="admin-nav-group" [class.open]="openGroups.operations" [class.current]="isGroupActive('operations')">
+                <button type="button" class="admin-nav-group-trigger" (click)="toggleGroup('operations')" [attr.aria-expanded]="openGroups.operations" aria-controls="admin-nav-operations">
+                  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4h16v4H4V4Zm0 6h7v10H4V10Zm9 0h7v5h-7v-5Zm0 7h7v3h-7v-3ZM6 6v0h12v0H6Zm0 6v6h3v-6H6Z"/></svg>
+                  <span>Operação</span><svg class="admin-nav-chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="m7 10 5 5 5-5H7Z"/></svg>
+                </button>
+                <div class="admin-nav-submenu" id="admin-nav-operations" [attr.hidden]="openGroups.operations ? null : ''">
+                  <a routerLink="/admin/operacao/pedidos" routerLinkActive="active"><svg viewBox="0 0 24 24"><path d="M5 3h14v18H5V3Zm2 2v14h10V5H7Zm2 3h6v2H9V8Zm0 4h6v2H9v-2Z"/></svg><span>Pedidos</span></a>
+                  <a routerLink="/admin/operacao/agenda" routerLinkActive="active"><svg viewBox="0 0 24 24"><path d="M7 2h2v3h6V2h2v3h3v17H4V5h3V2ZM6 9v11h12V9H6Zm2 2h3v3H8v-3Z"/></svg><span>Agenda</span></a>
+                  <a routerLink="/admin/operacao/producao" routerLinkActive="active"><svg viewBox="0 0 24 24"><path d="M4 18h16v3H4v-3Zm2-2c0-4 2-7 6-8V5h-2V3h4v5c4 1 6 4 6 8H6Zm2-2h10c-.6-2.6-2.5-4-5-4s-4.4 1.4-5 4Z"/></svg><span>Produção</span></a>
+                  <a routerLink="/admin/operacao/clientes" routerLinkActive="active"><svg viewBox="0 0 24 24"><path d="M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8Zm-7 9c0-4 3-7 7-7s7 3 7 7H5Z"/></svg><span>Clientes</span></a>
+                </div>
+              </section>
+            }
+
             @if (auth.canRead('categories') || auth.canRead('products')) {
               <section class="admin-nav-group" [class.open]="openGroups.catalog" [class.current]="isGroupActive('catalog')">
                 <button type="button" class="admin-nav-group-trigger" (click)="toggleGroup('catalog')" [attr.aria-expanded]="openGroups.catalog" aria-controls="admin-nav-catalog">
@@ -110,13 +125,14 @@ import { AuthService } from '../../../../core/services/auth.service';
   `
 })
 export class AdminLayoutComponent {
-  readonly openGroups = { catalog: true, finance: true, admin: true };
+  readonly openGroups = { operations: true, catalog: true, finance: true, admin: true };
 
   constructor(
     readonly auth: AuthService,
     private readonly router: Router
   ) {
     if (this.router.url.startsWith('/admin/financeiro')) this.openGroups.finance = true;
+    if (this.router.url.startsWith('/admin/operacao')) this.openGroups.operations = true;
     if (['/admin/colaboradores', '/admin/configuracoes', '/admin/importar-exportar'].some((path) => this.router.url.startsWith(path))) this.openGroups.admin = true;
   }
 
@@ -126,6 +142,7 @@ export class AdminLayoutComponent {
 
   isGroupActive(group: keyof typeof this.openGroups): boolean {
     const url = this.router.url;
+    if (group === 'operations') return url.startsWith('/admin/operacao');
     if (group === 'catalog') return url.startsWith('/admin/categorias') || url.startsWith('/admin/produtos');
     if (group === 'finance') return url.startsWith('/admin/financeiro');
     return ['/admin/colaboradores', '/admin/configuracoes', '/admin/importar-exportar'].some((path) => url.startsWith(path));

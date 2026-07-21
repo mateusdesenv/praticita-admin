@@ -18,7 +18,7 @@ export interface Collaborator {
 }
 
 export type CollaboratorRole = 'admin' | 'cozinheiro' | 'financeiro' | 'convidado';
-export type PermissionScreen = 'dashboard' | 'categories' | 'products' | 'finance' | 'collaborators' | 'settings' | 'backup';
+export type PermissionScreen = 'dashboard' | 'operations' | 'categories' | 'products' | 'finance' | 'collaborators' | 'settings' | 'backup';
 export type Permissions = Record<PermissionScreen, { read: boolean; write: boolean }>;
 
 export interface CollaboratorInput {

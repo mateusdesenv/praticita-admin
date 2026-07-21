@@ -11,6 +11,7 @@ import { AuthService } from '../../../../core/services/auth.service';
 
 const SCREENS: Array<{ key: PermissionScreen; label: string }> = [
   { key: 'dashboard', label: 'Visão geral' },
+  { key: 'operations', label: 'Operação da cozinha' },
   { key: 'categories', label: 'Categorias' },
   { key: 'products', label: 'Produtos' },
   { key: 'finance', label: 'Financeiro' },
@@ -323,10 +324,12 @@ export class CollaboratorsPageComponent implements OnInit {
     for (const screen of this.screens) all[screen.key] = { read: false, write: false };
     if (role === 'cozinheiro') {
       all.dashboard.read = true;
+      all.operations = { read: true, write: true };
       all.categories.read = true;
       all.products = { read: true, write: true };
     } else if (role === 'financeiro') {
       all.dashboard.read = true;
+      all.operations.read = true;
       all.products.read = true;
       all.finance = { read: true, write: true };
     }

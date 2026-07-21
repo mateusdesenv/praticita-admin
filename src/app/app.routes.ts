@@ -12,6 +12,7 @@ import { LoginPageComponent } from './features/auth/pages/login-page/login-page.
 import { PendingAccessPageComponent } from './features/auth/pages/pending-access-page/pending-access-page.component';
 import { CollaboratorsPageComponent } from './features/admin/pages/collaborators-page/collaborators-page.component';
 import { FinancePageComponent } from './features/admin/pages/finance-page/finance-page.component';
+import { OperationsPageComponent } from './features/admin/pages/operations-page/operations-page.component';
 import { authGuard, guestGuard } from './core/guards/auth.guard';
 
 export const routes: Routes = [
@@ -25,6 +26,11 @@ export const routes: Routes = [
     canActivate: [authGuard],
     children: [
       { path: '', component: DashboardPageComponent, canActivate: [authGuard], data: { permission: 'dashboard' } },
+      { path: 'operacao', redirectTo: 'operacao/pedidos', pathMatch: 'full' },
+      { path: 'operacao/pedidos', component: OperationsPageComponent, canActivate: [authGuard], data: { permission: 'operations', operationsView: 'orders' } },
+      { path: 'operacao/agenda', component: OperationsPageComponent, canActivate: [authGuard], data: { permission: 'operations', operationsView: 'schedule' } },
+      { path: 'operacao/producao', component: OperationsPageComponent, canActivate: [authGuard], data: { permission: 'operations', operationsView: 'production' } },
+      { path: 'operacao/clientes', component: OperationsPageComponent, canActivate: [authGuard], data: { permission: 'operations', operationsView: 'customers' } },
       { path: 'categorias', component: CategoriesPageComponent, canActivate: [authGuard], data: { permission: 'categories' } },
       { path: 'produtos', component: ProductsPageComponent, canActivate: [authGuard], data: { permission: 'products' } },
       { path: 'produtos/novo', component: ProductFormPageComponent, canActivate: [authGuard], data: { permission: 'products' } },
